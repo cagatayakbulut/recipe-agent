@@ -1,47 +1,41 @@
 import os
-import requests
+from openai import OpenAI
 
-OPENWEATHER_API_KEY = os.getenv("OPENWEATHER_API_KEY")
-TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
-TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
+client = OpenAI(
+    api_key=os.getenv("OPENAI_API_KEY")
+)
 
-def get_weather(city):
-    url = "https://api.openweathermap.org/data/2.5/weather"
-    params = {
-        "q": city,
-        "appid": OPENWEATHER_API_KEY,
-        "units": "metric",
-        "lang": "tr"
-    }
+prompt = """
+Sen bir Instagram yemek içerik üreticisisin.
 
-    response = requests.get(url, params=params)
-    data = response.json()
+Bugün için 1 yemek postu hazırla.
 
-    return {
-        "temp": data["main"]["temp"],
-        "desc": data["weather"][0]["description"]
-    }
+Şunları üret:
+1. Türkçe tarif adı
+2. English recipe title
+3. Malzemeler Türkçe
+4. Ingredients English
+5. Yapılış Türkçe
+6. Steps English
+7. Türkçe Instagram caption
+8. English Instagram caption
+9. Hashtagler
+10. AI görsel üretmek için İngilizce image prompt
 
-kadikoy = get_weather("Kadikoy,TR")
-sakarya = get_weather("Sakarya,TR")
-
-message = f"""
-Günaydın Çağatay ☀️
-
-Kadıköy:
-{kadikoy['temp']:.0f}°C - {kadikoy['desc']}
-
-Sakarya:
-{sakarya['temp']:.0f}°C - {sakarya['desc']}
-
-Şemsiye durumunu kontrol etmeyi unutma ☔
+Kurallar:
+- Evde yapılabilir yemek olsun.
+- Çok karmaşık olmasın.
+- Aile dostu olsun.
+- Instagram için sıcak ve iştah açıcı yaz.
+- Görsel prompt İngilizce olsun.
+- Çıktıyı düzenli başlıklarla ver.
 """
 
-url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+response = client.responses.create(
+    model="gpt-4.1-mini",
+    input=prompt
+)
 
-payload = {
-    "chat_id": TELEGRAM_CHAT_ID,
-    "text": message
-}
-
-requests.post(url, json=payload)
+print("✅ AI Recipe Agent çalıştı")
+print("-------------------------")
+print(response.output_text)
